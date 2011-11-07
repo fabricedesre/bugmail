@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{32d96adf-23fc-403d-a1c8-e5cf6a019bee}</em:id>
+    <em:version>2.0</em:version>
+    
+   
+    <!-- Thunderbird --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>2.0</em:minVersion>
+        <em:maxVersion>9.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+   
+    <!-- Seamonkey --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+        <em:minVersion>2.0a1</em:minVersion>
+        <em:maxVersion>2.6a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End MetaData -->
+    <em:name>Bugmail</em:name>
+    <em:description>A bugzilla companion</em:description>
+    <em:creator>Fabrice Desré</em:creator>
+    <em:contributor>Nick Kreeger</em:contributor>
+    <em:contributor>Ted Gifford</em:contributor>
+    <em:contributor>Matěj Cepl</em:contributor>
+    <em:iconURL>chrome://bugmail/skin/bugmail.png</em:iconURL>
+  </Description>      
+</RDF>
+
