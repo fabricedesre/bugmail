@@ -106,9 +106,8 @@ var bugzillaEngine = {
     }
     else { // Extract bugzilla URI from mail content
        var doc = document.getElementById('messagepane').contentDocument;
-       uri = doc.evaluate("//A[1]/@href", doc, null,
-                           Components.interfaces.nsIDOMXPathResult.STRING_TYPE,
-                           null).stringValue + "&ctype=xml&excludefield=attachmentdata";
+       uri = doc.querySelector("a[href*=show_bug]").href +
+             "&ctype=xml&excludefield=attachmentdata";
     }
     
     //uri = "https://bugzilla.mozilla.org/show_bug.cgi?id=379306&ctype=xml";
