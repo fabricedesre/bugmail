@@ -102,6 +102,16 @@ var bugmail = {
 			}
 		}
 		
+        if(engine) {
+            console.log("Detected bug message, uri: " + uri);
+            bugmail.update_using_engine(bypassCache, engine, uri);
+            console.log("Interface updated");
+        }
+    },
+
+    // Load the bug using given bug engine and given extracted bug uri
+    update_using_engine: function(bypassCache, engine, uri) {
+
 		if (engine) {
 			
 			document.getElementById("bugmail-logo").setAttribute("src", engine.iconURL);
@@ -151,6 +161,8 @@ var bugmail = {
 		}
 
 	},
+
+    
 	
 	observe: function(aSubject, aTopic, aData) {
             console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
