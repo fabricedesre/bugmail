@@ -22,6 +22,16 @@ bugmail extension for Thunderbird
 var CC = Components.classes;
 var CI = Components.interfaces;
 
+var console = {
+    service: null,
+    log: function(msg) {
+        if (!console.service)
+	    console.service = Components.classes["@mozilla.org/consoleservice;1"]
+	    .getService(Components.interfaces.nsIConsoleService);
+	console.service.logStringMessage(msg);
+    }
+};
+
 var bugmail = {
     loading : false,
 	req: null,
@@ -81,7 +91,7 @@ var bugmail = {
     update: function(bypassCache, mailURI, headers) {
 		var engine = null;
 		var uri = null;
-		
+
 		for (var i = 0; i < bugmail.engines.length; i++) {
 			if (bugmail.engines[i].isBug(mailURI, headers)) {
 				uri = bugmail.engines[i].getBugURI(mailURI, headers);
@@ -139,9 +149,11 @@ var bugmail = {
 		else {
 			document.getElementById("bugmail-box").setAttribute("collapsed", "true");
 		}
+
 	},
 	
 	observe: function(aSubject, aTopic, aData) {
+            console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
 	    if (aTopic == "MsgMsgDisplayed") {
 	      var messenger =  CC["@mozilla.org/messenger;1"].
 		  createInstance().QueryInterface(CI.nsIMessenger);
@@ -245,3 +257,76 @@ function cleanup() {
 var ObserverService = CC["@mozilla.org/observer-service;1"].
                       getService(CI.nsIObserverService);
 ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
+
+///////////////////////////////////////////////////////////////////////////
+// Thunderbird Conversations hooking
+///////////////////////////////////////////////////////////////////////////
+
+/*
+ Conversations do not provide MsgMsgDisplayed event. Instead, one
+ can subscribe their own events. See
+    http://blog.xulforum.org/index.php?post/2010/11/27/Thunderbird-Conversations-plugins
+ and
+    https://github.com/protz/GMail-Conversation-View/blob/master/modules/hook.js
+
+ In particular, onMessageStreamed hook is called whenever some message
+ is displayed in conversations view.
+
+ The problem is that while we have both message here, and dom objects,
+ the message is database-loaded, not remote, and DOM layout is different.
+ Therefore fairly different way to examine whether given element is a bug,
+ and what bug is it referencing, is needed.
+ */
+
+let hasConversations;
+try {
+  Components.utils.import("resource://conversations/hook.js");
+  hasConversations = true;
+} catch (e) {
+  hasConversations = false;
+}
+
+if (hasConversations) {
+  registerHook({
+      // Called whenever some message is displayed in conversation view.
+      // Arguments:
+      //   aMsgHdr: [xpconnect wrapped nsIMsgDBHdr]
+      //   aDomNode: [object HTMLLIElement]
+      //   aMsgWindow: [xpconnect wrapped nsIMsgWindow]
+      //   aMessage:  undefined  (is to appear in newer conversations versions probably)
+      //
+      // Some interesting attributes:
+      //    aMsgWindow.msgHeaderSink [nsIMsgHeaderSink]
+      //    aDomNode.baseURI  (wrong, "chrome://conversations/content/stub.xhtml")
+      // 
+      // if I had a message, then 
+      //  aMessage.folder.getUriForMsg(aMessage)
+      // or even
+      //  aMessage.folder.getUriForMsg(aMsgHdr)
+      // would give uri
+
+      onMessageStreamed: function (aMsgHdr, aDomNode, aMsgWindow, aMessage) {
+          console.log("onMessageStreamed");
+          console.log("aMsgHdr: " + aMsgHdr);
+          console.log("Dom node: " + aDomNode);
+          console.log("Msg window: " + aMsgWindow);
+          console.log("aMessage: " + aMessage);
+          console.log("aMsgHdr.folder: " + aMsgHdr.folder);
+
+          // var uri = aMsgWindow.openFolder.getUriForMsg(aMsgHdr);
+          var uri = aMsgHdr.folder.getUriForMsg(aMsgHdr);
+          console.log("uri: ", uri);
+          // bugmail.observe takes 3 params:
+          // - (not used) [xpconnect wrapped nsIMsgHeaderSink]
+          // - "MsgMsgDisplayed" (event name)
+          // - "imap-message://Marcin.Nowak@my.mail.server.com/INBOX#999" (uri)
+          //bugmail.observe(aMsgHdr, "MsgMsgDisplayed", aDomNode);
+
+          //bugmail.update(bypassCache, uri, mimeHeaders);
+          bugmail.update(bugmailStreamListener.bypassCache,
+                         uri,
+                         aMsgWindow.msgHeaderSink);
+                         
+      },
+  });
+}

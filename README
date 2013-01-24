@@ -1,1 +1,19 @@
 A Thunderbird add-on to help with bugmail
+
+
+
+Useful development tricks:
+
+- set browser.dom.window.dump.enabled to true in about:config
+  (about:config can be reachedby Preferences/Advanced/General/Config Editor)
+  this should make dump("...") available to extension code
+
+- set javascript.options.showInConsole = true in about:config
+
+- set extensions.logging.enabled = true
+
+- start thunderbird with 
+
+    thunderbird --purgecaches
+
+    MOZ_PURGE_CACHES
