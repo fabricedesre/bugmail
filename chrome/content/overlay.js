@@ -324,21 +324,40 @@ if (hasConversations) {
           console.log("Msg window: " + aMsgWindow);
           console.log("aMessage: " + aMessage);
           console.log("aMsgHdr.folder: " + aMsgHdr.folder);
+          // again stub.xhtml
+          console.log("aDomNode.baseUri = " + aDomNode.baseURI); // or .baseURIObject
 
-          // var uri = aMsgWindow.openFolder.getUriForMsg(aMsgHdr);
-          var uri = aMsgHdr.folder.getUriForMsg(aMsgHdr);
-          console.log("uri: ", uri);
-          // bugmail.observe takes 3 params:
-          // - (not used) [xpconnect wrapped nsIMsgHeaderSink]
-          // - "MsgMsgDisplayed" (event name)
-          // - "imap-message://Marcin.Nowak@my.mail.server.com/INBOX#999" (uri)
-          //bugmail.observe(aMsgHdr, "MsgMsgDisplayed", aDomNode);
+          /*
+          var enumerator = aMsgHdr.propertyEnumerator;
+          while(enumerator.hasMore()) {
+              console.log("Property: " + enumerator.getNext());
+          }
+          */
 
-          //bugmail.update(bypassCache, uri, mimeHeaders);
-          bugmail.update(bugmailStreamListener.bypassCache,
-                         uri,
-                         aMsgWindow.msgHeaderSink);
-                         
+
+          // Proof of concept, to be migrated down once works
+          var product = aMsgHdr.getProperty("x-bugzilla-product");
+          if(product) {
+              console.log("We have bugzilla bug here, trying to locate it's uri");
+              /*
+              var doc = aDomNode.ownerDocument;
+              console.log("doc = " + doc);
+              var uri = doc.querySelector("a[href*=show_bug]").href +
+                  "&ctype=xml&excludefield=attachmentdata";
+                  */
+              let iframe = aDomNode.getElementsByTagName("iframe")[0];
+              let iframeDoc = iframe.contentDocument;
+              console.log("inner document uri=" + iframeDoc.documentURI);  // YES: here we have imap://....
+              var uri = iframeDoc.querySelector("a[href*=show_bug]").href +
+                  "&ctype=xml&excludefield=attachmentdata";
+              console.log("uri from doc = " + uri);  // YES: this is OK
+              bugmail.update_using_engine(0, // bypasscache, maybe bugmailStreamListener.bypassCache, 
+                                          uri,
+                                          bugzillaEngine);
+              console.log("updated");
+          }
+
+                        
       },
   });
 }
