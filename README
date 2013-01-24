@@ -14,7 +14,7 @@ To test the development version in thunderbird:
       {32d96adf-23fc-403d-a1c8-e5cf6a019bee}
   (yes, use this ugly name, it must match <em:id> from install.rdf)
   which body is 
-      /path/to/the/devel/bugmail
+      /path/to/the/devel/bugmail/
   (replace with true full path to the directory this file lies in)
 
 - restart thunderbird
