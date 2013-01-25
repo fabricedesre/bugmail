@@ -117,7 +117,53 @@ var bugmail = {
 
     // Ensure bug box is visible (remove collapsed attribute, relocate if needed)
     ensure_bug_box_is_visible: function() {
-        document.getElementById("buggmail-box").removeAttribute("collapsed");
+        var bugbox = document.getElementById("buggmail-box");
+        bugbox.removeAttribute("collapsed");
+        
+        // In Conversation case and some multi-message cases #singlemessage
+        // may be hidden, while #multimessage is displayed. In normal mode
+        // #singlemessage is displayed.
+        //
+        // By default we are within #singlemessage. In such a case, we need
+        // to relocate our box to the visible one. Or if we already moved and
+        // now switch view, we must relocate back.
+        //
+        // Positioning: 
+        // - in #singlemessage we are after msgHeaderView, as set in overlay.xul
+        // - in #multimessage we are to lie before #messageList (or maybe
+        //      after #conversationHeaderWrapper or after #conversationHeader)
+
+        var multimsg = document.getElementById("multimessage");
+        if(! multimsg) {
+            // No conversations, nothing to do
+            return;
+        }
+        var singlemsg = document.getElementById("singlemessage");
+        
+        // Checking whether we are in hidden container
+        var parent = bugbox.parentNode;
+        var relocation_needed = false;
+        while(parent) {
+            if(parent.hidden) {
+                relocation_needed = true;
+                break;
+            }
+            parent = parent.parentNode;
+        }
+
+        // Relocating
+        if(relocation_needed) {
+            if(multimsg.hidden) {
+                console.log("bugmail: Relocating bugbox to singlemessage");
+                singlemsg.insertAfter(bugbox, document.getElementById("msgHeaderView"));
+            } else {
+                console.log("bugmail: Relocating bugbox to multimessage");
+                multimsg.insertBefore(bugbox, document.getElementById("messageList"));
+            }
+        } else {
+            console.log("bugmail: No need to relocate bugbox, it is visible");
+        }
+
     },
 
     // Load the bug using given bug engine and given extracted bug uri
@@ -150,7 +196,7 @@ var bugmail = {
             console.log("bugmail: Attempting to load bug details from " + uri);
             bugmail.req.open("GET", uri);
             bugmail.req.onload = function() {
-                console.log("bugmail: Got bug info reply: " + this.responseText);
+                console.log("bugmail: Got bug info reply. Lead: " + this.responseText.substring(0,300));
                 bugmail.loading = false;
                 document.getElementById("buggmail-throbber").setAttribute("collapsed", "true");
                 bugmail.storeInCache(uri, this.responseXML, this.responseText);
