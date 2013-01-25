@@ -21,6 +21,7 @@
 
 var CC = Components.classes;
 var CI = Components.interfaces;
+var CU = Components.utils;
 
 ///////////////////////////////////////////////////////////////////////////
 // Helper object: log console
@@ -29,9 +30,10 @@ var CI = Components.interfaces;
 var console = {
     service: null,
     log: function(msg) {
-        if (!console.service)
-            console.service = Components.classes["@mozilla.org/consoleservice;1"]
-                .getService(Components.interfaces.nsIConsoleService);
+        if (!console.service) {
+            console.service = CC["@mozilla.org/consoleservice;1"]
+                .getService(CI.nsIConsoleService);
+        }
         console.service.logStringMessage(msg);
     }
 };
@@ -128,7 +130,7 @@ var bugmail = {
             if (!bypassCache) {
                 var data = bugmail.getFromCache(uri);
                 if (data) {
-                    console.log("Succesfully reloaded bug info from cache. Uri: " + uri + ", text: " + data.text);
+                    console.log("bugmail: Succesfully reloaded bug info from cache. Uri: " + uri + ", text: " + data.text);
                     document.getElementById("bugmail-box").removeAttribute("collapsed");
                     var content = document.getElementById("bugmail-info");
                     while (content.lastChild) {
@@ -140,17 +142,17 @@ var bugmail = {
             }
             
             bugmail.req = new XMLHttpRequest();
-            console.log("Attempting to load " + uri);
+            console.log("bugmail: Attempting to load bug details from " + uri);
             bugmail.req.open("GET", uri);
             bugmail.req.onload = function() {
-                console.log("Got bug info reply: " + this.responseText);
+                console.log("bugmail: Got bug info reply: " + this.responseText);
                 bugmail.loading = false;
                 document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
                 bugmail.storeInCache(uri, this.responseXML, this.responseText);
                 engine.updateUI(this.responseXML, this.responseText);
             }
             bugmail.req.onerror = function() {
-                console.log("Bug info loading failed");
+                console.log("bugmail: Bug info loading failed");
                 bugmail.loading = false;
                 document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
             }
@@ -165,14 +167,14 @@ var bugmail = {
             bugmail.req.send(null);
         }
         else {
-            console.log("Removing bug info as no bug is present");
+            console.log("bugmail: Removing bug panel as no bug is present");
             document.getElementById("bugmail-box").setAttribute("collapsed", "true");
         }
         
     },
 
     observe: function(aSubject, aTopic, aData) {
-        console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
+        // console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
         if (aTopic == "MsgMsgDisplayed") {
             var messenger =  CC["@mozilla.org/messenger;1"].
                 createInstance().QueryInterface(CI.nsIMessenger);
@@ -273,9 +275,12 @@ function cleanup() {
     ObserverService.removeObserver(bugmail, "MsgMsgDisplayed");
 }
 
-var ObserverService = CC["@mozilla.org/observer-service;1"].
-    getService(CI.nsIObserverService);
-ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
+window.addEventListener("load", function(e) {
+    var ObserverService = CC["@mozilla.org/observer-service;1"].
+        getService(CI.nsIObserverService);
+    ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
+    console.log("bugmail: normal messages hook installed");
+});
 
 ///////////////////////////////////////////////////////////////////////////
 // Thunderbird Conversations hooking
@@ -297,77 +302,84 @@ ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
  and what bug is it referencing, is needed.
  */
 
-var hasConversations;
-try {
-    Components.utils.import("resource://conversations/hook.js");
-    hasConversations = true;
-} catch (e) {
-    hasConversations = false;
-}
+window.addEventListener("load", function(e) {
 
-if (hasConversations) {
-    console.log("Thunderbird conversations are active, installing hook for their mode");
-    registerHook({
-        // Called whenever some message is displayed in conversation view.
-        // Arguments:
-        //   aMsgHdr: [xpconnect wrapped nsIMsgDBHdr]
-        //   aDomNode: [object HTMLLIElement]
-        //   aMsgWindow: [xpconnect wrapped nsIMsgWindow]
-        //   aMessage:  undefined  (is to appear in newer conversations versions probably)
-        //
-        // Some interesting attributes:
-        //    aMsgWindow.msgHeaderSink [nsIMsgHeaderSink]
-        //    aDomNode.baseURI  (wrong, "chrome://conversations/content/stub.xhtml")
-        // 
-        // if I had a message, then 
-        //  aMessage.folder.getUriForMsg(aMessage)
-        // or even
-        //  aMessage.folder.getUriForMsg(aMsgHdr)
-        // would give uri
+    let hasConversations;
+    try {
+        CU.import("resource://conversations/hook.js");
+        hasConversations = true;
+    } catch (e) {
+        console.log("bugmail: Failed to import Thunderbird conversations hook, most likely this plugin is not installed. Error details: " + e);
+        hasConversations = false;
+    }
 
-        onMessageStreamed: function (aMsgHdr, aDomNode, aMsgWindow, aMessage) {
-            console.log("onMessageStreamed");
-            console.log("aMsgHdr: " + aMsgHdr);
-            console.log("Dom node: " + aDomNode);
-            console.log("Msg window: " + aMsgWindow);
-            console.log("aMessage: " + aMessage);
-            console.log("aMsgHdr.folder: " + aMsgHdr.folder);
-            // again stub.xhtml
-            console.log("aDomNode.baseUri = " + aDomNode.baseURI); // or .baseURIObject
+    if (hasConversations) {
+        console.log("Thunderbird conversations are active, installing hook for their mode");
+        registerHook({
+            // Called whenever some message is displayed in conversation view.
+            // Arguments:
+            //   aMsgHdr: [xpconnect wrapped nsIMsgDBHdr]
+            //   aDomNode: [object HTMLLIElement]
+            //   aMsgWindow: [xpconnect wrapped nsIMsgWindow]
+            //   aMessage:  undefined  (is to appear in newer conversations versions probably)
+            //
+            // Some interesting attributes:
+            //    aMsgWindow.msgHeaderSink [nsIMsgHeaderSink]
+            //    aDomNode.baseURI  (wrong, "chrome://conversations/content/stub.xhtml")
+            // 
+            // if I had a message, then 
+            //  aMessage.folder.getUriForMsg(aMessage)
+            // or even
+            //  aMessage.folder.getUriForMsg(aMsgHdr)
+            // would give uri
 
-            /*
-              var enumerator = aMsgHdr.propertyEnumerator;
-              while(enumerator.hasMore()) {
-              console.log("Property: " + enumerator.getNext());
-              }
-            */
-
-            // Proof of concept, to be migrated down once works
-
-            var product = aMsgHdr.getProperty("x-bugzilla-product");
-            if(product) {
-                console.log("We have bugzilla bug here, trying to locate it's uri");
+            onMessageStreamed: function (aMsgHdr, aDomNode, aMsgWindow, aMessage) {
+                console.log("bugmail: onMessageStreamed called");
                 /*
-                  var doc = aDomNode.ownerDocument;
-                  console.log("doc = " + doc);
-                  var uri = doc.querySelector("a[href*=show_bug]").href +
-                  "&ctype=xml&excludefield=attachmentdata";
+                  console.log("aMsgHdr: " + aMsgHdr);
+                  console.log("Dom node: " + aDomNode);
+                  console.log("Msg window: " + aMsgWindow);
+                  console.log("aMessage: " + aMessage);
+                  console.log("aMsgHdr.folder: " + aMsgHdr.folder);
+                  // again stub.xhtml
+                  console.log("aDomNode.baseUri = " + aDomNode.baseURI); // or .baseURIObject
                 */
-                let iframe = aDomNode.getElementsByTagName("iframe")[0];
-                let iframeDoc = iframe.contentDocument;
-                console.log("inner document uri=" + iframeDoc.documentURI);  // YES: here we have imap://....
-                var uri = iframeDoc.querySelector("a[href*=show_bug]").href +
-                    "&ctype=xml&excludefield=attachmentdata";
-                console.log("uri from doc = " + uri);  // YES: this is OK
-                bugmail.update_using_engine(0, // bypasscache, maybe bugmailStreamListener.bypassCache, 
-                                            uri,
-                                            bugzillaEngine);
-                console.log("updated");
-            }
+                /*
+                  var enumerator = aMsgHdr.propertyEnumerator;
+                  while(enumerator.hasMore()) {
+                  console.log("Property: " + enumerator.getNext());
+                  }
+                */
 
-            
-        }
-    });
-} else {
-    console.log("Thunderbird Conversations not active");
-}
+                // Proof of concept, to be migrated down once works
+
+                var product = aMsgHdr.getProperty("x-bugzilla-product");
+                if(product) {
+                    console.log("bugmail: We have bugzilla bug here, trying to locate it's uri");
+                    /*
+                      var doc = aDomNode.ownerDocument;
+                      console.log("doc = " + doc);
+                      var uri = doc.querySelector("a[href*=show_bug]").href +
+                      "&ctype=xml&excludefield=attachmentdata";
+                    */
+                    var iframe = aDomNode.getElementsByTagName("iframe")[0];
+                    var iframeDoc = iframe.contentDocument;
+                    console.log("bugmail: Inner document uri=" + iframeDoc.documentURI);  // YES: here we have imap://....
+                    var uri = iframeDoc.querySelector("a[href*=show_bug]").href +
+                        "&ctype=xml&excludefield=attachmentdata";
+                    console.log("bugmail: uri from doc = " + uri);  // YES: this is OK
+                    bugmail.update_using_engine(0, // bypasscache, maybe bugmailStreamListener.bypassCache, 
+                                                uri,
+                                                bugzillaEngine);
+                    console.log("bugmail: display updated");
+                }
+
+                
+            }
+        });
+        console.log("bugmail: Conversations hook installed");
+    } else {
+        console.log("bugmail: Thunderbird Conversations not active, so hook not installed");
+    }
+
+});
