@@ -1,5 +1,12 @@
 A Thunderbird add-on to help with bugmail
 
+This fork
+=========
+
+This fork adds preliminary support for Thunderbird Conversations
+(https://addons.mozilla.org/en-US/thunderbird/addon/gmail-conversation-view/),
+so far working only for Bugzilla and somewhat quick&dirty.
+
 Development
 =============
 
