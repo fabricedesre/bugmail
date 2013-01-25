@@ -129,9 +129,10 @@ var bugmail = {
         // now switch view, we must relocate back.
         //
         // Positioning: 
-        // - in #singlemessage we are after msgHeaderView, as set in overlay.xul
-        // - in #multimessage we are to lie before #messageList (or maybe
-        //      after #conversationHeaderWrapper or after #conversationHeader)
+        // - in #singlemessage we are just after msgHeaderView, immediately inside #singlemessage, 
+        //   as set in overlay.xul
+        // - in #multimessage case we can't put eleement inside #multimessage as this
+        //   is browser, not XUL element. Therefore we migrate up
 
         var multimsg = document.getElementById("multimessage");
         if(! multimsg) {
@@ -157,8 +158,11 @@ var bugmail = {
                 console.log("bugmail: Relocating bugbox to singlemessage");
                 singlemsg.insertAfter(bugbox, document.getElementById("msgHeaderView"));
             } else {
-                console.log("bugmail: Relocating bugbox to multimessage");
-                multimsg.insertBefore(bugbox, document.getElementById("messageList"));
+                console.log("bugmail: Relocating bugbox to (before) multimessage");
+                document.getElementById("messagepaneboxwrapper").insertBefore(
+                    bugbox, document.getElementById("messagepanebox"));
+                // multimsg.parent.insertBefore(bugbox, multimsg);
+                // multimsg.insertBefore(bugbox, document.getElementById("messageList"));
             }
         } else {
             console.log("bugmail: No need to relocate bugbox, it is visible");
