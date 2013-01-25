@@ -151,8 +151,8 @@ var bugmail = {
                 bugmail.storeInCache(uri, this.responseXML, this.responseText);
                 engine.updateUI(this.responseXML, this.responseText);
             }
-            bugmail.req.onerror = function() {
-                console.log("bugmail: Bug info loading failed");
+            bugmail.req.onerror = function(e) {
+                console.log("bugmail: Bug info loading failed. Status: " + e.target.status + ", text: " + this.responseText);
                 bugmail.loading = false;
                 document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
             }
@@ -377,8 +377,8 @@ window.addEventListener("load", function(e) {
                         "&ctype=xml&excludefield=attachmentdata";
                     console.log("bugmail: uri from doc = " + uri);  // YES: this is OK
                     bugmail.update_using_engine(0, // bypasscache, maybe bugmailStreamListener.bypassCache, 
-                                                uri,
-                                                bugzillaEngine);
+                                                bugzillaEngine,
+                                                uri);
                     console.log("bugmail: display updated");
                 }
 
