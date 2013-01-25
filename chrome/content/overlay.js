@@ -1,5 +1,5 @@
 /*
-bugmail extension for Thunderbird
+  bugmail extension for Thunderbird
     
     Copyright (C) 2008  Fabrice Desré
 
@@ -22,6 +22,10 @@ bugmail extension for Thunderbird
 var CC = Components.classes;
 var CI = Components.interfaces;
 
+///////////////////////////////////////////////////////////////////////////
+// Helper object: log console
+///////////////////////////////////////////////////////////////////////////
+
 var console = {
     service: null,
     log: function(msg) {
@@ -31,6 +35,10 @@ var console = {
         console.service.logStringMessage(msg);
     }
 };
+
+///////////////////////////////////////////////////////////////////////////
+// Main object: bugmail
+///////////////////////////////////////////////////////////////////////////
 
 var bugmail = {
     loading : false,
@@ -43,7 +51,7 @@ var bugmail = {
     
     getFromCache: function(uri) {
         var cacheService = CC["@mozilla.org/network/cache-service;1"].
-                getService(CI.nsICacheService);
+            getService(CI.nsICacheService);
         var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
             
         try {
@@ -54,8 +62,8 @@ var bugmail = {
             cache.text = null;
             var parser = CC["@mozilla.org/xmlextras/domparser;1"].createInstance(CI.nsIDOMParser);
             try {
-              var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
-              cache.doc = xml;
+                var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
+                cache.doc = xml;
             } catch(e) {
                 cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
                 entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
@@ -69,13 +77,13 @@ var bugmail = {
     
     storeInCache: function(uri, doc, text) {
         var cacheService = CC["@mozilla.org/network/cache-service;1"].
-        getService(CI.nsICacheService);
+            getService(CI.nsICacheService);
         if (doc) {
-          var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
-          var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
-          var output = entry.openOutputStream(0);
-          var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
-          ser.serializeToStream(doc, output, "utf-8");
+            var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
+            var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
+            var output = entry.openOutputStream(0);
+            var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
+            ser.serializeToStream(doc, output, "utf-8");
         }
         else {
             var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
@@ -96,7 +104,7 @@ var bugmail = {
             if (bugmail.engines[i].isBug(mailURI, headers)) {
                 uri = bugmail.engines[i].getBugURI(mailURI, headers);
                 if (uri) {
-                  engine = bugmail.engines[i];
+                    engine = bugmail.engines[i];
                   break;
                 }
             }
@@ -160,35 +168,33 @@ var bugmail = {
             console.log("Removing bug info as no bug is present");
             document.getElementById("bugmail-box").setAttribute("collapsed", "true");
         }
-
+        
     },
 
-    
-    
     observe: function(aSubject, aTopic, aData) {
-            console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
+        console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
         if (aTopic == "MsgMsgDisplayed") {
-          var messenger =  CC["@mozilla.org/messenger;1"].
-          createInstance().QueryInterface(CI.nsIMessenger);
-          var msgService = messenger.messageServiceFromURI(aData);
-          bugmailStreamListener.uri = aData;
-          bugmailStreamListener.bypassCache = false;
-          try {
-              msgService.streamMessage(aData, bugmailStreamListener, null,
-                        null, false, "", null);
-          } catch(e) {
-          }
+            var messenger =  CC["@mozilla.org/messenger;1"].
+                createInstance().QueryInterface(CI.nsIMessenger);
+            var msgService = messenger.messageServiceFromURI(aData);
+            bugmailStreamListener.uri = aData;
+            bugmailStreamListener.bypassCache = false;
+            try {
+                msgService.streamMessage(aData, bugmailStreamListener, null,
+                                         null, false, "", null);
+            } catch(e) {
+            }
         }
     },
     
     forceUpdate: function() {
         var messenger =  CC["@mozilla.org/messenger;1"].
-                createInstance().QueryInterface(CI.nsIMessenger);
+            createInstance().QueryInterface(CI.nsIMessenger);
         var msgService = messenger.messageServiceFromURI(bugmailStreamListener.uri);
         bugmailStreamListener.bypassCache = true;
         try {
-          msgService.streamMessage(bugmailStreamListener.uri, bugmailStreamListener, null,
-                                   null, false, "", null);
+            msgService.streamMessage(bugmailStreamListener.uri, bugmailStreamListener, null,
+                                     null, false, "", null);
         } catch(e) {
         }
     },
@@ -209,66 +215,66 @@ var bugmail = {
 
 var bugmailStreamListener = {
 
-message: "",
-uri: null,
-bypassCache: false,
+    message: "",
+    uri: null,
+    bypassCache: false,
 
-QueryInterface: function(aIId, instance) {
-  if (aIId.equals(CI.nsIStreamListener) ||
-      aIId.equals(CI.nsISupports))
-    return this;
-  throw Components.results.NS_ERROR_NO_INTERFACE;
-},
+    QueryInterface: function(aIId, instance) {
+        if (aIId.equals(CI.nsIStreamListener) ||
+            aIId.equals(CI.nsISupports))
+            return this;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
 
-onStartRequest: function(request, context) {
-},
+    onStartRequest: function(request, context) {
+    },
 
-onStopRequest: function(request, context, status, errorMsg) {
-  try {
-    var headers = this.message.split(/\n\n|\r\n\r\n|\r\r/)[0];
-    var mimeHeaders = CC["@mozilla.org/messenger/mimeheaders;1"].
-                      createInstance(CI.nsIMimeHeaders);
-    mimeHeaders.initialize(headers, headers.length);
-    this.message = "";
-    bugmail.update(this.bypassCache, this.uri, mimeHeaders);
-  }
-  catch (ex) {
-    return;
-  }
-},
+    onStopRequest: function(request, context, status, errorMsg) {
+        try {
+            var headers = this.message.split(/\n\n|\r\n\r\n|\r\r/)[0];
+            var mimeHeaders = CC["@mozilla.org/messenger/mimeheaders;1"].
+                createInstance(CI.nsIMimeHeaders);
+            mimeHeaders.initialize(headers, headers.length);
+            this.message = "";
+            bugmail.update(this.bypassCache, this.uri, mimeHeaders);
+        }
+        catch (ex) {
+            return;
+        }
+    },
 
-onDataAvailable: function(request, context, inputStream, offset, count) {
-  try {
-    var inStream = CC["@mozilla.org/scriptableinputstream;1"].createInstance(CI.nsIScriptableInputStream);
-    inStream.init(inputStream);
+    onDataAvailable: function(request, context, inputStream, offset, count) {
+        try {
+            var inStream = CC["@mozilla.org/scriptableinputstream;1"].createInstance(CI.nsIScriptableInputStream);
+            inStream.init(inputStream);
+            
+            // It is necessary to read in data from the input stream
+            var inData = inStream.read(count);
 
-    // It is necessary to read in data from the input stream
-    var inData = inStream.read(count);
+            // Also ignore stuff after the first 25K or so
+            // should be enough to get headers...
+            if (this.message && this.message.length > 25000)
+                return 0;
 
-    // Also ignore stuff after the first 25K or so
-    // should be enough to get headers...
-    if (this.message && this.message.length > 25000)
-      return 0;
-
-    this.message += inData;
-    return 0;
-  }
-  catch (ex) {
-    return 0;
-  }
-}
+            this.message += inData;
+            return 0;
+        }
+        catch (ex) {
+            return 0;
+        }
+    }
 };
 
 
 function cleanup() {
     //alert("Bugmail cleanup");
-      var ObserverService = CC["@mozilla.org/observer-service;1"].
-                      getService(CI.nsIObserverService);
-   ObserverService.removeObserver(bugmail, "MsgMsgDisplayed");
+    var ObserverService = CC["@mozilla.org/observer-service;1"].
+        getService(CI.nsIObserverService);
+    ObserverService.removeObserver(bugmail, "MsgMsgDisplayed");
 }
 
 var ObserverService = CC["@mozilla.org/observer-service;1"].
-                      getService(CI.nsIObserverService);
+    getService(CI.nsIObserverService);
 ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
 
 ///////////////////////////////////////////////////////////////////////////
@@ -291,7 +297,7 @@ ObserverService.addObserver(bugmail, "MsgMsgDisplayed", false);
  and what bug is it referencing, is needed.
  */
 
-let hasConversations;
+var hasConversations;
 try {
     Components.utils.import("resource://conversations/hook.js");
     hasConversations = true;
@@ -360,7 +366,7 @@ if (hasConversations) {
             }
 
             
-        },
+        }
     });
 } else {
     console.log("Thunderbird Conversations not active");
