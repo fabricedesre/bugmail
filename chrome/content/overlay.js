@@ -434,8 +434,12 @@ window.addEventListener("load", function(e) {
                     var iframe = aDomNode.getElementsByTagName("iframe")[0];
                     var iframeDoc = iframe.contentDocument;
                     console.log("bugmail: Inner document uri=" + iframeDoc.documentURI);  // YES: here we have imap://....
-                    var uri = iframeDoc.querySelector("a[href*=show_bug]").href +
-                        "&ctype=xml&excludefield=attachmentdata";
+                    var uri = iframeDoc.querySelector("a[href*=show_bug]").href;
+                    // Note: on URIs containing comments (/path/to/show_bug.cgi?id=3333#c6 etc)
+                    // bugzilla happens to ignore ctype=xml and return html. 
+                    // Therefore we drop fragment if we happened to get one
+                    uri = uri.replace(/#.*$/, "");
+                    uri = uri + "&ctype=xml&excludefield=attachmentdata";
                     console.log("bugmail: uri from doc = " + uri);  // YES: this is OK
                     bugmail.update_using_engine(0, // bypasscache, maybe bugmailStreamListener.bypassCache, 
                                                 bugzillaEngine,
