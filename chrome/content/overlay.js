@@ -115,6 +115,11 @@ var bugmail = {
         bugmail.update_using_engine(bypassCache, engine, uri);
     },
 
+    // Ensure bug box is visible (remove collapsed attribute, relocate if needed)
+    ensure_bug_box_is_visible: function() {
+        document.getElementById("buggmail-box").removeAttribute("collapsed");
+    },
+
     // Load the bug using given bug engine and given extracted bug uri
     update_using_engine: function(bypassCache, engine, uri) {
 
@@ -131,7 +136,7 @@ var bugmail = {
                 var data = bugmail.getFromCache(uri);
                 if (data) {
                     console.log("bugmail: Succesfully reloaded bug info from cache. Uri: " + uri + ", text: " + data.text);
-                    document.getElementById("buggmail-box").removeAttribute("collapsed");
+                    bugmail.ensure_bug_box_is_visible();
                     var content = document.getElementById("buggmail-info");
                     while (content.lastChild) {
                         content.removeChild(content.lastChild);
@@ -161,6 +166,7 @@ var bugmail = {
                 content.removeChild(content.lastChild);
             }
             document.getElementById("buggmail-details").setAttribute("collapsed", "true");
+            bugmail.ensure_bug_box_is_visible();
             document.getElementById("buggmail-box").removeAttribute("collapsed");
             document.getElementById("buggmail-throbber").removeAttribute("collapsed");
             bugmail.loading = true;
