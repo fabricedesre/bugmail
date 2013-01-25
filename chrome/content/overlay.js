@@ -34,177 +34,177 @@ var console = {
 
 var bugmail = {
     loading : false,
-	req: null,
-	engines : [],
-	
-	addEngine: function(engine) {
-		bugmail.engines.push(engine);
-	},
-	
-	getFromCache: function(uri) {
-		var cacheService = CC["@mozilla.org/network/cache-service;1"].
+    req: null,
+    engines : [],
+    
+    addEngine: function(engine) {
+        bugmail.engines.push(engine);
+    },
+    
+    getFromCache: function(uri) {
+        var cacheService = CC["@mozilla.org/network/cache-service;1"].
                 getService(CI.nsICacheService);
-		var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
+        var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
             
-		try {
-			var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
-			var input = entry.openInputStream(0);
-			var cache = new Object();
-			cache.doc = null;
-			cache.text = null;
-			var parser = CC["@mozilla.org/xmlextras/domparser;1"].createInstance(CI.nsIDOMParser);
-			try {
-			  var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
-			  cache.doc = xml;
-			} catch(e) {
-				cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-				entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
-				cache.text = entry.data.data;
-			}
-			return cache;
-		} catch(e) {
-			return null;
-		}
-	},
-	
-	storeInCache: function(uri, doc, text) {
-		var cacheService = CC["@mozilla.org/network/cache-service;1"].
-		getService(CI.nsICacheService);
-		if (doc) {
-		  var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
-		  var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
-		  var output = entry.openOutputStream(0);
-		  var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
-		  ser.serializeToStream(doc, output, "utf-8");
-		}
-		else {
-			var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-			var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
-			var wrapper = CC["@mozilla.org/supports-cstring;1"].createInstance(CI.nsISupportsCString);
-			wrapper.data = text;
-			entry.cacheElement = wrapper;
-		}
-		entry.markValid;
-		entry.close();
-	},
+        try {
+            var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
+            var input = entry.openInputStream(0);
+            var cache = new Object();
+            cache.doc = null;
+            cache.text = null;
+            var parser = CC["@mozilla.org/xmlextras/domparser;1"].createInstance(CI.nsIDOMParser);
+            try {
+              var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
+              cache.doc = xml;
+            } catch(e) {
+                cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
+                entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
+                cache.text = entry.data.data;
+            }
+            return cache;
+        } catch(e) {
+            return null;
+        }
+    },
+    
+    storeInCache: function(uri, doc, text) {
+        var cacheService = CC["@mozilla.org/network/cache-service;1"].
+        getService(CI.nsICacheService);
+        if (doc) {
+          var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
+          var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
+          var output = entry.openOutputStream(0);
+          var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
+          ser.serializeToStream(doc, output, "utf-8");
+        }
+        else {
+            var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
+            var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
+            var wrapper = CC["@mozilla.org/supports-cstring;1"].createInstance(CI.nsISupportsCString);
+            wrapper.data = text;
+            entry.cacheElement = wrapper;
+        }
+        entry.markValid;
+        entry.close();
+    },
     
     update: function(bypassCache, mailURI, headers) {
-		var engine = null;
-		var uri = null;
+        var engine = null;
+        var uri = null;
 
-		for (var i = 0; i < bugmail.engines.length; i++) {
-			if (bugmail.engines[i].isBug(mailURI, headers)) {
-				uri = bugmail.engines[i].getBugURI(mailURI, headers);
-		        if (uri) {
-		          engine = bugmail.engines[i];
-				  break;
-		        }
-			}
-		}
-		
+        for (var i = 0; i < bugmail.engines.length; i++) {
+            if (bugmail.engines[i].isBug(mailURI, headers)) {
+                uri = bugmail.engines[i].getBugURI(mailURI, headers);
+                if (uri) {
+                  engine = bugmail.engines[i];
+                  break;
+                }
+            }
+        }
+        
         bugmail.update_using_engine(bypassCache, engine, uri);
     },
 
     // Load the bug using given bug engine and given extracted bug uri
     update_using_engine: function(bypassCache, engine, uri) {
 
-		if (engine) {
-			
-			document.getElementById("bugmail-logo").setAttribute("src", engine.iconURL);
-			
-			if (bugmail.loading) {
-				bugmail.req.abort();
+        if (engine) {
+            
+            document.getElementById("bugmail-logo").setAttribute("src", engine.iconURL);
+            
+            if (bugmail.loading) {
+                bugmail.req.abort();
                 bugmail.loading = false;
-			}
+            }
             
             if (!bypassCache) {
-				var data = bugmail.getFromCache(uri);
-				if (data) {
+                var data = bugmail.getFromCache(uri);
+                if (data) {
                     console.log("Succesfully reloaded bug info from cache. Uri: " + uri + ", text: " + data.text);
-					document.getElementById("bugmail-box").removeAttribute("collapsed");
-					var content = document.getElementById("bugmail-info");
-					while (content.lastChild) {
-						content.removeChild(content.lastChild);
-					}
-					engine.updateUI(data.doc, data.text);
-					return;
-				}
-			}
-			
-			bugmail.req = new XMLHttpRequest();
+                    document.getElementById("bugmail-box").removeAttribute("collapsed");
+                    var content = document.getElementById("bugmail-info");
+                    while (content.lastChild) {
+                        content.removeChild(content.lastChild);
+                    }
+                    engine.updateUI(data.doc, data.text);
+                    return;
+                }
+            }
+            
+            bugmail.req = new XMLHttpRequest();
             console.log("Attempting to load " + uri);
-			bugmail.req.open("GET", uri);
-			bugmail.req.onload = function() {
+            bugmail.req.open("GET", uri);
+            bugmail.req.onload = function() {
                 console.log("Got bug info reply: " + this.responseText);
-				bugmail.loading = false;
-				document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
-				bugmail.storeInCache(uri, this.responseXML, this.responseText);
+                bugmail.loading = false;
+                document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
+                bugmail.storeInCache(uri, this.responseXML, this.responseText);
                 engine.updateUI(this.responseXML, this.responseText);
-			}
-			bugmail.req.onerror = function() {
+            }
+            bugmail.req.onerror = function() {
                 console.log("Bug info loading failed");
-				bugmail.loading = false;
-				document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
-			}
-			var content = document.getElementById("bugmail-info");
-			while (content.lastChild) {
-				content.removeChild(content.lastChild);
-			}
-			document.getElementById("bugmail-details").setAttribute("collapsed", "true");
-			document.getElementById("bugmail-box").removeAttribute("collapsed");
-			document.getElementById("bugmail-throbber").removeAttribute("collapsed");
-			bugmail.loading = true;
-			bugmail.req.send(null);
-		}
-		else {
+                bugmail.loading = false;
+                document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
+            }
+            var content = document.getElementById("bugmail-info");
+            while (content.lastChild) {
+                content.removeChild(content.lastChild);
+            }
+            document.getElementById("bugmail-details").setAttribute("collapsed", "true");
+            document.getElementById("bugmail-box").removeAttribute("collapsed");
+            document.getElementById("bugmail-throbber").removeAttribute("collapsed");
+            bugmail.loading = true;
+            bugmail.req.send(null);
+        }
+        else {
             console.log("Removing bug info as no bug is present");
-			document.getElementById("bugmail-box").setAttribute("collapsed", "true");
-		}
+            document.getElementById("bugmail-box").setAttribute("collapsed", "true");
+        }
 
-	},
+    },
 
     
-	
-	observe: function(aSubject, aTopic, aData) {
+    
+    observe: function(aSubject, aTopic, aData) {
             console.log("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
-	    if (aTopic == "MsgMsgDisplayed") {
-	      var messenger =  CC["@mozilla.org/messenger;1"].
-		  createInstance().QueryInterface(CI.nsIMessenger);
-	      var msgService = messenger.messageServiceFromURI(aData);
-	      bugmailStreamListener.uri = aData;
-	      bugmailStreamListener.bypassCache = false;
-	      try {
-		      msgService.streamMessage(aData, bugmailStreamListener, null,
-					    null, false, "", null);
-	      } catch(e) {
-	      }
-	    }
-	},
-	
-	forceUpdate: function() {
-		var messenger =  CC["@mozilla.org/messenger;1"].
+        if (aTopic == "MsgMsgDisplayed") {
+          var messenger =  CC["@mozilla.org/messenger;1"].
+          createInstance().QueryInterface(CI.nsIMessenger);
+          var msgService = messenger.messageServiceFromURI(aData);
+          bugmailStreamListener.uri = aData;
+          bugmailStreamListener.bypassCache = false;
+          try {
+              msgService.streamMessage(aData, bugmailStreamListener, null,
+                        null, false, "", null);
+          } catch(e) {
+          }
+        }
+    },
+    
+    forceUpdate: function() {
+        var messenger =  CC["@mozilla.org/messenger;1"].
                 createInstance().QueryInterface(CI.nsIMessenger);
-		var msgService = messenger.messageServiceFromURI(bugmailStreamListener.uri);
-		bugmailStreamListener.bypassCache = true;
-		try {
-		  msgService.streamMessage(bugmailStreamListener.uri, bugmailStreamListener, null,
-								   null, false, "", null);
-		} catch(e) {
-		}
-	},
-	
-	loadHiddenIFrame: function(text) {
-		var content = document.getElementById("bugmail-iframe").contentDocument;
-		var range = content.createRange();
-		var root = content.getElementById("root");
-		while (root.lastChild) {
-			root.removeChild(root.lastChild);
-		}
-		range.selectNode(root);
-		var frag = range.createContextualFragment(text);
-		root.appendChild(frag);
-		return content;
-	}
+        var msgService = messenger.messageServiceFromURI(bugmailStreamListener.uri);
+        bugmailStreamListener.bypassCache = true;
+        try {
+          msgService.streamMessage(bugmailStreamListener.uri, bugmailStreamListener, null,
+                                   null, false, "", null);
+        } catch(e) {
+        }
+    },
+    
+    loadHiddenIFrame: function(text) {
+        var content = document.getElementById("bugmail-iframe").contentDocument;
+        var range = content.createRange();
+        var root = content.getElementById("root");
+        while (root.lastChild) {
+            root.removeChild(root.lastChild);
+        }
+        range.selectNode(root);
+        var frag = range.createContextualFragment(text);
+        root.appendChild(frag);
+        return content;
+    }
 };
 
 var bugmailStreamListener = {
@@ -215,7 +215,7 @@ bypassCache: false,
 
 QueryInterface: function(aIId, instance) {
   if (aIId.equals(CI.nsIStreamListener) ||
-	  aIId.equals(CI.nsISupports))
+      aIId.equals(CI.nsISupports))
     return this;
   throw Components.results.NS_ERROR_NO_INTERFACE;
 },
@@ -233,7 +233,7 @@ onStopRequest: function(request, context, status, errorMsg) {
     bugmail.update(this.bypassCache, this.uri, mimeHeaders);
   }
   catch (ex) {
-	return;
+    return;
   }
 },
 
@@ -246,7 +246,7 @@ onDataAvailable: function(request, context, inputStream, offset, count) {
     var inData = inStream.read(count);
 
     // Also ignore stuff after the first 25K or so
-	// should be enough to get headers...
+    // should be enough to get headers...
     if (this.message && this.message.length > 25000)
       return 0;
 
@@ -254,15 +254,15 @@ onDataAvailable: function(request, context, inputStream, offset, count) {
     return 0;
   }
   catch (ex) {
-	return 0;
+    return 0;
   }
 }
 };
 
 
 function cleanup() {
-	//alert("Bugmail cleanup");
-  	var ObserverService = CC["@mozilla.org/observer-service;1"].
+    //alert("Bugmail cleanup");
+      var ObserverService = CC["@mozilla.org/observer-service;1"].
                       getService(CI.nsIObserverService);
    ObserverService.removeObserver(bugmail, "MsgMsgDisplayed");
 }
