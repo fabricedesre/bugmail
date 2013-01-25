@@ -2,6 +2,27 @@ A Thunderbird add-on to help with bugmail
 
 
 
+Development
+=============
+
+To test the development version in thunderbird:
+
+- uninstall „normal” Bugmail if it is installed (using Thunderbird
+  Add-ons Manager)
+
+- in your extensions directory 
+  (~/.thunderbird/<Profile Name>/extensions/ or similar)
+  create the file named 
+      {32d96adf-23fc-403d-a1c8-e5cf6a019bee}
+  (yes, use this ugly name, it must match <em:id> from install.rdf)
+  which body is 
+      /path/to/the/devel/bugmail/
+  (replace with true full path to the directory this file lies in)
+
+- restart thunderbird
+
+More details: https://developer.mozilla.org/en-US/docs/Extensions/Thunderbird/Building_a_Thunderbird_extension_7:_Installation
+
 Useful development tricks:
 
 - set browser.dom.window.dump.enabled to true in about:config
@@ -17,3 +38,15 @@ Useful development tricks:
     thunderbird --purgecaches
 
     MOZ_PURGE_CACHES
+
+Packaging
+=============
+
+Simply zip the whole extension folder, for example
+
+    cd path/to/bugmail
+    zip -r ../bugmail.xpi chrome chrome.manifest install.rdf LICENSE README
+
+
+
+    
