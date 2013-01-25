@@ -106,8 +106,12 @@ var bugzillaEngine = {
     }
     else { // Extract bugzilla URI from mail content
        var doc = document.getElementById('messagepane').contentDocument;
-       uri = doc.querySelector("a[href*=show_bug]").href +
-             "&ctype=xml&excludefield=attachmentdata";
+        uri = doc.querySelector("a[href*=show_bug]").href;
+        // Note: on URIs containing comments (/path/to/show_bug.cgi?id=3333#c6 etc)
+        // bugzilla happens to ignore ctype=xml and return html. 
+        // Therefore we drop fragment if we happened to get one
+        uri = uri.replace(/#.*$/, "");
+        uri = uri + "&ctype=xml&excludefield=attachmentdata";
     }
     
     //uri = "https://bugzilla.mozilla.org/show_bug.cgi?id=379306&ctype=xml";
