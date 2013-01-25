@@ -120,7 +120,7 @@ var bugmail = {
 
         if (engine) {
             
-            document.getElementById("bugmail-logo").setAttribute("src", engine.iconURL);
+            document.getElementById("buggmail-logo").setAttribute("src", engine.iconURL);
             
             if (bugmail.loading) {
                 bugmail.req.abort();
@@ -131,8 +131,8 @@ var bugmail = {
                 var data = bugmail.getFromCache(uri);
                 if (data) {
                     console.log("bugmail: Succesfully reloaded bug info from cache. Uri: " + uri + ", text: " + data.text);
-                    document.getElementById("bugmail-box").removeAttribute("collapsed");
-                    var content = document.getElementById("bugmail-info");
+                    document.getElementById("buggmail-box").removeAttribute("collapsed");
+                    var content = document.getElementById("buggmail-info");
                     while (content.lastChild) {
                         content.removeChild(content.lastChild);
                     }
@@ -147,28 +147,28 @@ var bugmail = {
             bugmail.req.onload = function() {
                 console.log("bugmail: Got bug info reply: " + this.responseText);
                 bugmail.loading = false;
-                document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
+                document.getElementById("buggmail-throbber").setAttribute("collapsed", "true");
                 bugmail.storeInCache(uri, this.responseXML, this.responseText);
                 engine.updateUI(this.responseXML, this.responseText);
             }
             bugmail.req.onerror = function(e) {
                 console.log("bugmail: Bug info loading failed. Status: " + e.target.status + ", text: " + this.responseText);
                 bugmail.loading = false;
-                document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
+                document.getElementById("buggmail-throbber").setAttribute("collapsed", "true");
             }
-            var content = document.getElementById("bugmail-info");
+            var content = document.getElementById("buggmail-info");
             while (content.lastChild) {
                 content.removeChild(content.lastChild);
             }
-            document.getElementById("bugmail-details").setAttribute("collapsed", "true");
-            document.getElementById("bugmail-box").removeAttribute("collapsed");
-            document.getElementById("bugmail-throbber").removeAttribute("collapsed");
+            document.getElementById("buggmail-details").setAttribute("collapsed", "true");
+            document.getElementById("buggmail-box").removeAttribute("collapsed");
+            document.getElementById("buggmail-throbber").removeAttribute("collapsed");
             bugmail.loading = true;
             bugmail.req.send(null);
         }
         else {
             console.log("bugmail: Removing bug panel as no bug is present");
-            document.getElementById("bugmail-box").setAttribute("collapsed", "true");
+            document.getElementById("buggmail-box").setAttribute("collapsed", "true");
         }
         
     },
@@ -202,7 +202,7 @@ var bugmail = {
     },
     
     loadHiddenIFrame: function(text) {
-        var content = document.getElementById("bugmail-iframe").contentDocument;
+        var content = document.getElementById("buggmail-iframe").contentDocument;
         var range = content.createRange();
         var root = content.getElementById("root");
         while (root.lastChild) {

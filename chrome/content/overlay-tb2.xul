@@ -21,7 +21,7 @@
 -->
 <?xml-stylesheet href="chrome://bugmail/skin/bugmail.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://bugmail/locale/bugmail.dtd">
-<overlay id="bugmail-overlay"
+<overlay id="buggmail-overlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          onunload="cleanup();">
   <script type="application/x-javascript" src="chrome://bugmail/content/binding.js"/>
@@ -31,24 +31,24 @@
   <script type="application/x-javascript" src="chrome://bugmail/content/flyspray.js"/>
   <script type="application/x-javascript" src="chrome://bugmail/content/launchpad.js"/>
   <stringbundleset>
-    <stringbundle id="bugmail-strings" src="chrome://bugmail/locale/bugmail.strings"/>
+    <stringbundle id="buggmail-strings" src="chrome://bugmail/locale/bugmail.strings"/>
   </stringbundleset>
   <vbox id="messagepanebox">
-    <hbox insertafter="msgHeaderView" id="bugmail-box" align="start"
+    <hbox insertafter="msgHeaderView" id="buggmail-box" align="start"
           collapsed="true">
       <hbox align="center" flex="1">
-        <image id="bugmail-logo"/>
-        <hbox id="bugmail-throbber" align="center">
+        <image id="buggmail-logo"/>
+        <hbox id="buggmail-throbber" align="center">
           <image src="chrome://global/skin/throbber/Throbber-small.gif"/>
           <label value="&retrieve.label;"/>
         </hbox>
-        <hbox id="bugmail-info"/>
-        <button collapsed="true" id="bugmail-details" label="&details.label;"
+        <hbox id="buggmail-info"/>
+        <button collapsed="true" id="buggmail-details" label="&details.label;"
               oncommand="launchpadEngine.toogleDetails();"/>
         <spacer flex="1"/>
         <button label="&update.label;" icon="refresh" oncommand="bugmail.forceUpdate()"/>
       </hbox>
-      <iframe id="bugmail-iframe" src="chrome://bugmail/content/blank.html" collapsed="true"/>
+      <iframe id="buggmail-iframe" src="chrome://bugmail/content/blank.html" collapsed="true"/>
     </hbox>
   </vbox>
 </overlay>

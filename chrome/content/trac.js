@@ -52,7 +52,7 @@ var tracEngine = {
 	  bugDoc.documentElement.appendChild(elem);
 	}
 	var binding = new xsltBinding();
-	binding.initWithSrc("bugmail-info", bugDoc, "chrome://bugmail/content/trac.xsl",
+	binding.initWithSrc("buggmail-info", bugDoc, "chrome://bugmail/content/trac.xsl",
 						function() {}, []);
   }
 }

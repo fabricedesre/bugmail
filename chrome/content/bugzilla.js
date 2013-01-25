@@ -123,13 +123,13 @@ var bugzillaEngine = {
   
   updateUI: function(doc, text) {
     var binding = new xsltBinding();
-	binding.initWithSrc("bugmail-info", doc, "chrome://bugmail/content/bugzilla.xsl",
+	binding.initWithSrc("buggmail-info", doc, "chrome://bugmail/content/bugzilla.xsl",
 						function() {}, []);
 		
   },
   
   askLogin: function() {
-    var bundle = document.getElementById("bugmail-strings");
+    var bundle = document.getElementById("buggmail-strings");
     
     var CC = Components.classes;
     var CI = Components.interfaces;
