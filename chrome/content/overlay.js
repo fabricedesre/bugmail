@@ -159,8 +159,9 @@ var bugmail = {
                 singlemsg.insertAfter(bugbox, document.getElementById("msgHeaderView"));
             } else {
                 console.log("bugmail: Relocating bugbox to (before) multimessage");
-                document.getElementById("messagepaneboxwrapper").insertBefore(
-                    bugbox, document.getElementById("messagepanebox"));
+                var msgpanebox = document.getElementById("messagepanebox");
+                msgpanebox.insertBefore(
+                    bugbox, msgpanebox.firstChild);
                 // multimsg.parent.insertBefore(bugbox, multimsg);
                 // multimsg.insertBefore(bugbox, document.getElementById("messageList"));
             }
