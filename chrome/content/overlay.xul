@@ -34,8 +34,7 @@
     <stringbundle id="bugmail-strings" src="chrome://bugmail/locale/bugmail.strings"/>
   </stringbundleset>
   <vbox id="singlemessage">
-    <hbox insertafter="msgHeaderView" id="bugmail-box" align="start"
-          collapsed="true">
+      <hbox insertafter="msgHeaderView" id="bugmail-box" align="start" collapsed="true">
       <hbox align="center" flex="1">
         <image id="bugmail-logo"/>
         <hbox id="bugmail-throbber" align="center">

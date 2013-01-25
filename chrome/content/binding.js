@@ -30,6 +30,7 @@ function xsltBinding() {
 xsltBinding.prototype = {
 	
   init: function(pid, psrc, pxsl, cb, params) {
+      console.log("bugmail/binding: init");
     this.id = pid;
     this.loaded = 0;
     this.needed = 2;
@@ -59,6 +60,7 @@ xsltBinding.prototype = {
   },
   
   initWithSrc: function(pid, psrc, pxsl, cb, params) {
+      console.log("bugmail/binding: initWithSrc. psrc=" + psrc);
     this.id = pid;
     this.loaded = 0;
     this.needed = 1;
@@ -79,16 +81,19 @@ xsltBinding.prototype = {
   },
   
   initWithDoc: function(doc, pid, psrc, pxsl, cb, params) {
+      console.log("bugmail/binding: initWithDoc");
     this.doc = doc;
     this.init(pid, psrc, pxsl, cb, params);
   },
   
   initSrcWithDoc: function(doc, pid, psrc, pxsl, cb, params) {
+      console.log("bugmail/binding: initSrcWithDoc");
     this.doc = doc;
     this.initWithSrc(pid, psrc, pxsl, cb, params);
   },
   
   refresh: function() {
+      console.log("bugmail/binding: refresh. this.src=" + this.src + ", this.srcreq=" + this.srcreq);
     this.xsl = this.xslreq.responseXML;
     if (!this.src)
       this.src = this.srcreq.responseXML;
