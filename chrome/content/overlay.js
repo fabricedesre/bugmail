@@ -445,6 +445,9 @@ window.addEventListener("load", function(e) {
                                                 bugzillaEngine,
                                                 uri);
                     console.log("bugmail: display updated");
+                } else {
+                    // This removes bugbox
+                    bugmail.update_using_engine(0, null, "");
                 }
 
                 
