@@ -202,10 +202,14 @@ var bugmail = {
             bugmail.req.open("GET", uri);
             bugmail.req.onload = function() {
                 console.log("bugmail: Got bug info reply. Lead: " + this.responseText.substring(0,300));
-                bugmail.loading = false;
-                document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
-                bugmail.storeInCache(uri, this.responseXML, this.responseText);
-                engine.updateUI(this.responseXML, this.responseText);
+                if(this.responseXML) {
+                    bugmail.loading = false;
+                    document.getElementById("bugmail-throbber").setAttribute("collapsed", "true");
+                    bugmail.storeInCache(uri, this.responseXML, this.responseText);
+                    engine.updateUI(this.responseXML, this.responseText);
+                } else {
+                    console.log("bugmail: Obtained reply did not parse.");
+                }
             }
             bugmail.req.onerror = function(e) {
                 console.log("bugmail: Bug info loading failed. Status: " + e.target.status + ", text: " + this.responseText);
