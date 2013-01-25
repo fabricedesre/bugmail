@@ -305,12 +305,20 @@ window.addEventListener("load", function(e) {
 window.addEventListener("load", function(e) {
 
     let hasConversations;
+    // Trying two locations of conversations hook
     try {
+        // Older
         CU.import("resource://conversations/hook.js");
         hasConversations = true;
     } catch (e) {
-        console.log("bugmail: Failed to import Thunderbird conversations hook, most likely this plugin is not installed. Error details: " + e);
-        hasConversations = false;
+        // Newer
+        try {
+            CU.import("resource://conversations/modules/hook.js");
+            hasConversations = true;
+        } catch(e2) {
+            console.log("bugmail: Failed to import Thunderbird conversations hook, most likely this plugin is not installed. Error details for older location: " + e + ", for newer location: " + e2);
+            hasConversations = false;
+        }
     }
 
     if (hasConversations) {
