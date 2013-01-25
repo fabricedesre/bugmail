@@ -43,12 +43,12 @@ var launchpadEngine = {
     var parser = new DOMParser();
     var desc = parser.parseFromString(content, "text/xml");
     desc.documentElement.setAttribute("class", "launchpad");
-    document.getElementById("buggmail-info").appendChild(document.importNode(desc.documentElement, true));
-    document.getElementById("buggmail-details").removeAttribute("collapsed");
+    document.getElementById("bugmail-info").appendChild(document.importNode(desc.documentElement, true));
+    document.getElementById("bugmail-details").removeAttribute("collapsed");
   },
   
   toogleDetails: function() {
-    var content = document.getElementById("buggmail-info").firstChild;
+    var content = document.getElementById("bugmail-info").firstChild;
     var cvalue = content.getAttribute("class");
     if (cvalue == "launchpad") {
       content.setAttribute("class", "launchpad-full");

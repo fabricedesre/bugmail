@@ -46,7 +46,7 @@ var flysprayEngine = {
   updateUI: function(doc, text) {
 	var content = bugmail.loadHiddenIFrame(text);
 	var binding = new xsltBinding();
-	binding.initWithSrc("buggmail-info", content, "chrome://bugmail/content/flyspray.xsl",
+	binding.initWithSrc("bugmail-info", content, "chrome://bugmail/content/flyspray.xsl",
 						function() {}, []);
   }
 }
