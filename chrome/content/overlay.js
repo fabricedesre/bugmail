@@ -31,51 +31,80 @@ var bugmail = {
 		bugmail.engines.push(engine);
 	},
 	
-	getFromCache: function(uri) {
+	getFromCache: function(uri, successcb, failcb) {
 		var cacheService = CC["@mozilla.org/network/cache-service;1"].
                 getService(CI.nsICacheService);
 		var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
             
-		try {
-			var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
-			var input = entry.openInputStream(0);
-			var cache = new Object();
-			cache.doc = null;
-			cache.text = null;
-			var parser = CC["@mozilla.org/xmlextras/domparser;1"].createInstance(CI.nsIDOMParser);
-			try {
-			  var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
-			  cache.doc = xml;
-			} catch(e) {
-				cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-				entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_READ, true);
-				cache.text = entry.data.data;
-			}
-			return cache;
-		} catch(e) {
-			return null;
-		}
-	},
+    try {
+      cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_READ, {
+        onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+          if (!aEntry)
+            return failcb();
+          var input = aEntry.openInputStream(0);
+          var cache = new Object();
+          cache.doc = null;
+          cache.text = null;
+          var parser = CC["@mozilla.org/xmlextras/domparser;1"].createInstance(CI.nsIDOMParser);
+          try {
+            var xml = parser.parseFromStream(input, "utf-8", input.available(), "text/xml");
+            cache.doc = xml;
+            successcb(cache);
+          } catch(e) {
+            cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
+            cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_READ, {
+              onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+                if (!aEntry)
+                  return failcb();
+                cache.text = aEntry.data.data;
+                successcb(cache);
+              },
+              onCacheEntryDoomed: function(aStatus) {
+                failcb();
+              }
+            }, true);
+          }
+        },
+        onCacheEntryDoomed: function(aStatus) {
+          failcb();
+        }
+      }, true);
+    } catch(e) {
+      failcb();
+    }
+  },
 	
 	storeInCache: function(uri, doc, text) {
 		var cacheService = CC["@mozilla.org/network/cache-service;1"].
 		getService(CI.nsICacheService);
 		if (doc) {
 		  var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
-		  var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
-		  var output = entry.openOutputStream(0);
-		  var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
-		  ser.serializeToStream(doc, output, "utf-8");
+		  cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_WRITE, {
+        onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+          if (!aEntry)
+            return;
+          var output = aEntry.openOutputStream(0);
+          var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
+          ser.serializeToStream(doc, output, "utf-8");
+          aEntry.markValid();
+          aEntry.close();
+        }
+      }, true);
 		}
 		else {
 			var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-			var entry = cacheSession.openCacheEntry(uri, CI.nsICache.ACCESS_WRITE, true);
-			var wrapper = CC["@mozilla.org/supports-cstring;1"].createInstance(CI.nsISupportsCString);
-			wrapper.data = text;
-			entry.cacheElement = wrapper;
+			cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_WRITE, {
+        onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+          if (!aEntry)
+            return;
+          var wrapper = CC["@mozilla.org/supports-cstring;1"].createInstance(CI.nsISupportsCString);
+          wrapper.data = text;
+          aEntry.cacheElement = wrapper;
+          aEntry.markValid();
+          aEntry.close();
+        }
+      }, true);
 		}
-		entry.markValid;
-		entry.close();
 	},
     
     update: function(bypassCache, mailURI, headers) {
@@ -100,20 +129,8 @@ var bugmail = {
 				bugmail.req.abort();
                 bugmail.loading = false;
 			}
-            
-            if (!bypassCache) {
-				var data = bugmail.getFromCache(uri);
-				if (data) {
-					document.getElementById("bugmail-box").removeAttribute("collapsed");
-					var content = document.getElementById("bugmail-info");
-					while (content.lastChild) {
-						content.removeChild(content.lastChild);
-					}
-					engine.updateUI(data.doc, data.text);
-					return;
-				}
-			}
-			
+
+      var download_bug_info = function() {
 			bugmail.req = new XMLHttpRequest();
 			bugmail.req.open("GET", uri);
 			bugmail.req.onload = function() {
@@ -135,7 +152,21 @@ var bugmail = {
 			document.getElementById("bugmail-throbber").removeAttribute("collapsed");
 			bugmail.loading = true;
 			bugmail.req.send(null);
-		}
+      }
+
+      if (!bypassCache) {
+        bugmail.getFromCache(uri, function(data){
+          document.getElementById("bugmail-box").removeAttribute("collapsed");
+          var content = document.getElementById("bugmail-info");
+          while (content.lastChild) {
+            content.removeChild(content.lastChild);
+          }
+          engine.updateUI(data.doc, data.text);
+        }, download_bug_info);
+      } else {
+        download_bug_info();
+      }
+    }
 		else {
 			document.getElementById("bugmail-box").setAttribute("collapsed", "true");
 		}
