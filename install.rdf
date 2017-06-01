@@ -4,15 +4,15 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>{32d96adf-23fc-403d-a1c8-e5cf6a019bee}</em:id>
-    <em:version>2.0</em:version>
+    <em:version>3.1</em:version>
     
    
     <!-- Thunderbird --> 
     <em:targetApplication>
       <Description>
         <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
-        <em:minVersion>2.0</em:minVersion>
-        <em:maxVersion>9.0a1</em:maxVersion>
+        <em:minVersion>45.0</em:minVersion>
+        <em:maxVersion>52.0</em:maxVersion>
       </Description>
     </em:targetApplication>
    
@@ -20,18 +20,20 @@
     <em:targetApplication>
       <Description>
         <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
-        <em:minVersion>2.0a1</em:minVersion>
-        <em:maxVersion>2.6a1</em:maxVersion>
+        <em:minVersion>2.42</em:minVersion>
+        <em:maxVersion>2.49</em:maxVersion>
       </Description>
     </em:targetApplication>
     
     <!-- Front End MetaData -->
     <em:name>Bugmail</em:name>
     <em:description>A bugzilla companion</em:description>
-    <em:creator>Fabrice Desré</em:creator>
+    <em:creator>Fabrice Desré (adaption to cache2 by Jorg K)</em:creator>
     <em:contributor>Nick Kreeger</em:contributor>
     <em:contributor>Ted Gifford</em:contributor>
     <em:contributor>Matěj Cepl</em:contributor>
+    <em:contributor>Jörg Knobloch</em:contributor>
+    <em:contributor>Wolfgang Powisch</em:contributor>
     <em:iconURL>chrome://bugmail/skin/bugmail.png</em:iconURL>
   </Description>      
 </RDF>

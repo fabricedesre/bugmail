@@ -1,7 +1,5 @@
 content bugmail chrome/content/
 locale bugmail en-US chrome/locale/en-US/
 skin bugmail    default chrome/skin/
-overlay chrome://messenger/content/messageWindow.xul chrome://bugmail/content/overlay.xul appversion>=3.0b3
-overlay chrome://messenger/content/messenger.xul chrome://bugmail/content/overlay.xul appversion>=3.0b3
-overlay chrome://messenger/content/messageWindow.xul chrome://bugmail/content/overlay-tb2.xul appversion>=2.0
-overlay chrome://messenger/content/messenger.xul chrome://bugmail/content/overlay-tb2.xul appversion>=2.0
+overlay chrome://messenger/content/messageWindow.xul chrome://bugmail/content/overlay.xul appversion>=51.0
+overlay chrome://messenger/content/messenger.xul chrome://bugmail/content/overlay.xul appversion>=51.0
