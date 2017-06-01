@@ -65,7 +65,8 @@ var bugmail = {
                             onCacheEntryAvailable: function(aEntry, isNew, appCache, aStatus) {
                                 if (!aEntry)
                                     return failcb();
-                                cache.text = aEntry.data.data;
+                                input = aEntry.openInputStream(0)
+                                cache.text = NetUtil.readInputStreamToString(input, input.available(), {charset: "utf-8"})
                                 successcb(cache);
                             },
                             onCacheEntryCheck: function(cacheEntry, appCache) {
