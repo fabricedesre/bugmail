@@ -21,6 +21,18 @@ bugmail extension for Thunderbird
 
 var CC = Components.classes;
 var CI = Components.interfaces;
+Components.utils.import('resource://gre/modules/LoadContextInfo.jsm');
+
+var _cacheStorage = null;
+function get_cache_strorage() {
+    if (_cacheStorage)
+        return _cacheStorage;
+  
+    let svc = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
+                        .getService(Components.interfaces.nsICacheStorageService);
+    _cacheStorage = svc.memoryCacheStorage(LoadContextInfo.default);
+    return _cacheStorage;
+}
 
 var bugmail = {
     loading : false,
@@ -32,13 +44,11 @@ var bugmail = {
     },
     
     getFromCache: function(uri, successcb, failcb) {
-        var cacheService = CC["@mozilla.org/network/cache-service;1"].
-                           getService(CI.nsICacheService);
-        var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
-            
+        var cacheStorage = get_cache_strorage();
+        
         try {
-            cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_READ, {
-                onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+            cacheStorage.asyncOpenURI(makeURI(uri), "", Ci.nsICacheStorage.OPEN_READONLY, {
+                onCacheEntryAvailable: function(aEntry, isNew, appCache, aStatus) {
                     if (!aEntry)
                         return failcb();
                     var input = aEntry.openInputStream(0);
@@ -51,19 +61,24 @@ var bugmail = {
                         cache.doc = xml;
                         successcb(cache);
                     } catch(e) {
-                        cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-                        cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_READ, {
-                            onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+                        cacheStorage.asyncOpenURI(makeURI(uri), "", Ci.nsICacheStorage.OPEN_READONLY, {
+                            onCacheEntryAvailable: function(aEntry, isNew, appCache, aStatus) {
                                 if (!aEntry)
                                     return failcb();
                                 cache.text = aEntry.data.data;
                                 successcb(cache);
+                            },
+                            onCacheEntryCheck: function(cacheEntry, appCache) {
+                                return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
                             },
                             onCacheEntryDoomed: function(aStatus) {
                                 failcb();
                             }
                         }, true);
                     }
+                },
+                onCacheEntryCheck: function(cacheEntry, appCache) {
+                    return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
                 },
                 onCacheEntryDoomed: function(aStatus) {
                     failcb();
@@ -75,32 +90,27 @@ var bugmail = {
     },
     
     storeInCache: function(uri, doc, text) {
-        var cacheService = CC["@mozilla.org/network/cache-service;1"].
-                           getService(CI.nsICacheService);
+        var cacheStorage = get_cache_strorage();
         if (doc) {
-            var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, true);
-            cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_WRITE, {
-                onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+            cacheStorage.asyncOpenURI(makeURI(uri), "", Ci.nsICacheStorage.OPEN_NORMALLY, {
+                onCacheEntryAvailable: function(aEntry, isNew, appCache, aStatus) {
                     if (!aEntry)
                         return;
                     var output = aEntry.openOutputStream(0);
                     var ser = CC["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(CI.nsIDOMSerializer);
                     ser.serializeToStream(doc, output, "utf-8");
                     aEntry.markValid();
-                    aEntry.close();
                 }
             }, true);
         } else {
-            var cacheSession = cacheService.createSession("bugmail", CI.nsICache.STORE_IN_MEMORY, false);
-            cacheSession.asyncOpenCacheEntry(uri, CI.nsICache.ACCESS_WRITE, {
-                onCacheEntryAvailable: function(aEntry, aAccessGranted, aStatus) {
+            cacheStorage.asyncOpenURI(makeURI(uri), "", Ci.nsICacheStorage.OPEN_NORMALLY, {
+                onCacheEntryAvailable: function(aEntry, isNew, appCache, aStatus) {
                     if (!aEntry)
                         return;
                     var wrapper = CC["@mozilla.org/supports-cstring;1"].createInstance(CI.nsISupportsCString);
                     wrapper.data = text;
                     aEntry.cacheElement = wrapper;
                     aEntry.markValid();
-                    aEntry.close();
                 }
             }, true);
         }
